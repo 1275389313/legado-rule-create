@@ -170,6 +170,7 @@ legado-rule-create/
    ├─ data/                    书源库数据（自动生成；桌面窗口模式存到 %APPDATA%）
    └─ scripts/                 测试与调试脚本
       ├─ test-engine.js        用真实书源跑完整校验
+      ├─ acceptance.js         端到端验收测试（25 项，模拟完整用户流程）
       ├─ test-sources.js       从 504 个书源抽样批量回归
       ├─ test-render.js        JS 渲染兜底链路测试（stub 渲染器，不需浏览器）
       ├─ test-electron-main.js 电子壳主进程空跑测试（两种模式）
@@ -198,6 +199,10 @@ cd app && npm start -- --browser
 
 # 用真实书源跑一遍完整校验（搜索/详情/目录/正文）
 node app/scripts/test-engine.js 混混 "斗破苍穹"
+
+# 端到端验收测试（25 项，需先启动服务）
+#   STUDIO_DATA_DIR=.tmp-accept PORT=8444 node app/src/server/index.js
+BASE=http://127.0.0.1:8444 node app/scripts/acceptance.js
 
 # 从 504 个书源里抽样批量回归（数量 并发 关键字）
 node app/scripts/test-sources.js 20 4 "斗破苍穹"
