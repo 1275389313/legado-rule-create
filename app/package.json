@@ -1,0 +1,19 @@
+{
+  "name": "legado-source-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "书源工作台 · Legado 书源管理与自动生成（PC 桌面端）",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "web": "node src/server/index.js",
+    "test:engine": "node scripts/test-engine.js",
+    "test:api": "node scripts/api-test.js",
+    "test:ui": "node scripts/ui-check.js",
+    "gen": "node scripts/gen.js",
+    "gen:batch": "node scripts/gen-batch.js"
+  },
+  "devDependencies": {
+    "electron": "^44.6.0"
+  }
+}

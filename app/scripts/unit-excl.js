@@ -1,0 +1,11 @@
+'use strict';
+const { parseSelectorSeg, parseDefaultRule, defaultSelect } = require('../src/core/rule');
+const { parseHtml } = require('../src/core/dom');
+console.log('parseSelectorSeg tag.div!0 =>', JSON.stringify(parseSelectorSeg('tag.div!0')));
+console.log('parseSelectorSeg class.row.-1 =>', JSON.stringify(parseSelectorSeg('class.row.-1')));
+console.log('parseDefaultRule =>', JSON.stringify(parseDefaultRule('class.row.-1@tag.div!0')));
+const doc = parseHtml('<div class="row"><div>a</div><div>b</div><div>c</div></div>');
+const out = defaultSelect(doc, 'tag.div!0', null);
+console.log('defaultSelect tag.div!0 ->', out.length, out.map((e) => e.text));
+const out2 = defaultSelect(doc, 'class.row.-1@tag.div!0', null);
+console.log('full ->', out2.length, out2.map((e) => e.text));

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>书源工作台 · Legado 书源管理与生成</title>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">📚</span>
+    <div>
+      <h1>书源工作台</h1>
+      <p class="sub">输入网址 → 自动生成书源 → 自测校验 → 导出给「阅读」APP</p>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="create">① 网址造源</button>
+    <button class="tab" data-tab="library">② 书源管理</button>
+    <button class="tab" data-tab="debug">③ 规则调试</button>
+    <button class="tab" data-tab="help">④ 使用帮助</button>
+  </nav>
+  <div class="status" id="serverStatus">连接中…</div>
+</header>
+
+<main>
+  <!-- ========== 网址造源 ========== -->
+  <section class="panel active" id="panel-create">
+    <div class="card">
+      <h2>输入网站网址，自动生成书源</h2>
+      <div class="row">
+        <input id="genUrl" class="grow" type="text" placeholder="例如：http://www.hunhun.cc 或 https://www.biquge365.net">
+        <input id="genKey" type="text" class="key-input" value="斗破苍穹" placeholder="测试关键字">
+        <label class="switch hidden" id="genRenderWrap" title="站点内容由脚本渲染时，用隐藏浏览器窗口抓取">
+          <input type="checkbox" id="genRender" checked> JS 渲染兜底
+        </label>
+        <button id="btnGenerate" class="primary">开始生成</button>
+      </div>
+      <p class="hint">生成过程：抓首页 → 找搜索入口 → 分析书籍列表 → 探测详情/目录/正文规则 → 用规则引擎真机自测打分。</p>
+      <div id="genProgress" class="progress hidden"><div class="bar"><span></span></div><div class="log" id="genLog"></div></div>
+    </div>
+
+    <div class="card hidden" id="genResult">
+      <div class="result-head">
+        <h2>生成结果 <span id="genScore" class="score"></span></h2>
+        <div class="actions">
+          <button id="btnSaveGen" class="primary">保存到书源库</button>
+          <button id="btnExportGen">导出 JSON</button>
+          <button id="btnCopyGen">复制 JSON</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <h3>生成的规则</h3>
+          <pre id="genRules" class="code"></pre>
+        </div>
+        <div>
+          <h3>自测报告</h3>
+          <div id="genReport"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 书源管理 ========== -->
+  <section class="panel" id="panel-library">
+    <div class="card">
+      <div class="row">
+        <input id="libSearch" class="grow" type="text" placeholder="搜索书源名称 / 网址">
+        <select id="libGroup"><option value="">全部分组</option></select>
+        <button id="btnImportFile">导入 JSON 文件</button>
+        <button id="btnImportSample">载入示例（折黎No.0051.json）</button>
+        <button id="btnExportAll">导出全部</button>
+        <input type="file" id="fileInput" accept=".json" class="hidden">
+      </div>
+      <div class="stats" id="libStats"></div>
+    </div>
+    <div class="card table-card">
+      <table class="table" id="libTable">
+        <thead>
+          <tr><th>书源名称</th><th>网址</th><th>分组</th><th>启用</th><th>操作</th></tr>
+        </thead>
+        <tbody id="libBody"></tbody>
+      </table>
+      <div class="pager">
+        <button id="libPrev">上一页</button>
+        <span id="libPageInfo">1 / 1</span>
+        <button id="libNext">下一页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 编辑器（弹层） ========== -->
+  <section class="panel" id="panel-editor">
+    <div class="card">
+      <div class="result-head">
+        <h2>编辑书源 <span id="editName" class="muted"></span></h2>
+        <div class="actions">
+          <button id="btnAiFill" title="根据当前网址重新嗅探并填充规则">智能补全规则</button>
+          <button id="btnValidateEdit" class="primary">真机校验</button>
+          <button id="btnSaveEdit" class="primary">保存</button>
+          <button id="btnBackLib">返回列表</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <h3>基本</h3>
+          <div class="field"><label>书源名称</label><input id="f_name" type="text"></div>
+          <div class="field"><label>书源网址</label><input id="f_url" type="text"></div>
+          <div class="field"><label>分组</label><input id="f_group" type="text"></div>
+          <div class="field"><label>搜索地址</label><textarea id="f_searchUrl" rows="2"></textarea></div>
+          <div class="field"><label>发现地址</label><textarea id="f_exploreUrl" rows="3"></textarea></div>
+          <div class="field"><label>请求头 / 登录</label><textarea id="f_header" rows="2"></textarea></div>
+          <h3>搜索规则</h3>
+          <div id="rules-search" class="rules"></div>
+          <h3>详情规则</h3>
+          <div id="rules-BookInfo" class="rules"></div>
+          <h3>目录规则</h3>
+          <div id="rules-Toc" class="rules"></div>
+          <h3>正文规则</h3>
+          <div id="rules-Content" class="rules"></div>
+        </div>
+        <div>
+          <h3>校验报告</h3>
+          <div id="editReport" class="report"></div>
+          <h3>预览</h3>
+          <div class="preview-tabs">
+            <button data-preview="search" class="mini active">搜索</button>
+            <button data-preview="bookInfo" class="mini">详情</button>
+            <button data-preview="toc" class="mini">目录</button>
+            <button data-preview="content" class="mini">正文</button>
+          </div>
+          <div id="editPreview" class="preview"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 规则调试 ========== -->
+  <section class="panel" id="panel-debug">
+    <div class="card">
+      <h2>规则调试器</h2>
+      <div class="row">
+        <input id="dbgUrl" class="grow" type="text" placeholder="要抓取的页面地址，例如 https://www.hunhun.cc/30/30967/">
+        <button id="btnDbgFetch" class="primary">抓取</button>
+      </div>
+      <div class="field"><label>规则（每行一条）</label>
+        <textarea id="dbgRules" rows="4" placeholder="h1@text&#10;@css:.book_list li a@text"></textarea>
+      </div>
+      <div class="row">
+        <button id="btnDbgEval" class="primary">执行规则</button>
+        <button id="btnDbgRender" class="hidden">对比 JS 渲染效果</button>
+      </div>
+      <div id="dbgResult" class="report"></div>
+      <div id="dbgRenderResult" class="report"></div>
+      <h3>页面源码（前 4000 字）</h3>
+      <pre id="dbgHtml" class="code"></pre>
+    </div>
+  </section>
+
+  <!-- ========== 帮助 ========== -->
+  <section class="panel" id="panel-help">
+    <div class="card prose">
+      <h2>怎么用</h2>
+      <ol>
+        <li><b>网址造源</b>：粘贴小说站网址 → 点「开始生成」。程序会自动找搜索入口、识别书籍列表、详情页、目录、正文，并生成 Legado 规则。</li>
+        <li>生成后可以点「真机校验」，用真实网络把搜索→详情→目录→正文跑一遍，看每一环是否通。</li>
+        <li>满意后「保存到书源库」，在<b>书源管理</b>里点「导出全部」得到 JSON 文件。</li>
+        <li>把 JSON 文件传到手机，在「阅读」APP → 书源管理 → 右上角 → 本地导入，即可使用。</li>
+      </ol>
+      <h2>规则速查</h2>
+      <table class="table small">
+        <thead><tr><th>语法</th><th>含义</th><th>例子</th></tr></thead>
+        <tbody>
+          <tr><td>class.X.n</td><td>按 class 取第 n 个（-1 为最后一个）</td><td>class.row.-1@tag.div!0</td></tr>
+          <tr><td>tag.X.n</td><td>按标签名 + class 取</td><td>tag.div.book_other.1@text</td></tr>
+          <tr><td>id.X / text.X</td><td>按 id / 文本内容取</td><td>id.content@text</td></tr>
+          <tr><td>@text/@href/@src/@html</td><td>取文本 / 链接 / 图片 / 内部 HTML</td><td>dt@a@href</td></tr>
+          <tr><td>@css: / @XPath: / @json:</td><td>CSS 选择器 / XPath / JSONPath</td><td>@css:#content@html</td></tr>
+          <tr><td>##正则##替换</td><td>正则净化（循环替换）</td><td>h1@text##\\[.+\\]</td></tr>
+          <tr><td>&& / || / %%</td><td>合并 / 取第一个有值 / 交替取</td><td>a@text&&b@text</td></tr>
+          <tr><td>{{key}} {{page}}</td><td>搜索关键字 / 页码</td><td>/search.php?q={{key}}&p={{page}}</td></tr>
+          <tr><td>!n / [n:m]</td><td>排除第 n 个 / 取区间</td><td>tag.li!0@text</td></tr>
+        </tbody>
+      </table>
+      <h2>常见问题</h2>
+      <ul>
+        <li><b>搜索不到</b>：站点可能需要 POST 搜索、需要 cookie，或用了 Cloudflare 之类防护；可在编辑里手动改 searchUrl。</li>
+        <li><b>站点要 JS 才能出内容</b>：用「启动桌面客户端.bat」启动，程序会用隐藏浏览器窗口渲染一遍；生成页有「JS 渲染兜底」开关，「规则调试」里可对比渲染前后差异。</li>
+        <li><b>正文空白</b>：多为字体加密或图片章节，需要手动编写 @js: 规则。</li>
+        <li><b>乱码</b>：程序会自动识别 gbk/gb18030/big5；若仍乱码，可在请求头里指定 charset。</li>
+        <li><b>书源失效了</b>：在书源管理里点「校验」，看是搜索、详情、目录还是正文哪一环断了，再对照站点现状改规则。</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/js/app.js"></script>
+</body>
+</html>

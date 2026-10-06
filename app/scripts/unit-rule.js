@@ -1,0 +1,17 @@
+'use strict';
+const { AnalyzeRule } = require('../src/core/rule');
+const html = '<html><body><div class="row"><div>x1</div><span>s1</span></div><div class="row"><div>x2</div><span>s2</span></div></body></html>';
+const a = new AnalyzeRule({ content: html, baseUrl: 'http://x.com/' });
+console.log('built, type', a.contentType);
+const els = a.getElements('class.row.-1');
+console.log('class.row.-1 ->', els.length, JSON.stringify(els.map((e) => e.tagName)));
+const els2 = a.getElements('class.row.-1@tag.div!0');
+console.log('with excl ->', els2.length, JSON.stringify(els2.map((e) => e.tagName + ':' + e.text)));
+const els3 = a.getElements('class.row.-1@tag.div!0@text');
+console.log('with text ->', JSON.stringify(els3));
+console.log('string:', a.getString('class.row.-1@tag.div!0@text'));
+console.log('sel:', a.getString('span@text'));
+console.log('css:', a.getString('@css:.row > div'));
+console.log('range:', a.getString('tag.div[1:2]@text'));
+console.log('conn:', a.getString('span.0@text&&span.1@text'));
+console.log('tail:', a.getString('span@text##x'));

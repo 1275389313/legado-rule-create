@@ -1,0 +1,16 @@
+node_modules/
+app/node_modules/
+app/.npm-cache/
+app/.electron-cache/
+app/.test-userdata/
+app/data/
+app/screenshots/
+app/scripts/out-*.json
+app/scripts/out-*.html
+app/scripts/*-out.txt
+app/scripts/*-err.txt
+app/scripts/edgeprofile/
+dist/
+*.log
+.DS_Store
+Thumbs.db
